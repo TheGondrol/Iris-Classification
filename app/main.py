@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
-from model.classifier import model_predict
+from app.model.classifier import model_predict
 
 
 # Initialize FastAPI app

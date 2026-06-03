@@ -1,23 +1,23 @@
 steps:
-  # ==========================================
-  # STEP 0: Build the Docker Image
-  # ==========================================
-  - name: "gcr.io/cloud-builders/docker"
-    id: "Build Docker Image"
-    args:
-      - "build"
-      - "-t"
-      - "us-central1-docker.pkg.dev/$PROJECT_ID/testing/iris-classifier:$COMMIT_SHA"
-      - "."
+  # # ==========================================
+  # # STEP 0: Build the Docker Image
+  # # ==========================================
+  # - name: "gcr.io/cloud-builders/docker"
+  #   id: "Build Docker Image"
+  #   args:
+  #     - "build"
+  #     - "-t"
+  #     - "us-central1-docker.pkg.dev/$PROJECT_ID/testing/iris-classifier:$COMMIT_SHA"
+  #     - "."
 
-  # ==========================================
-  # STEP 1: Push Image to Regional Artifact Registry
-  # ==========================================
-  - name: "gcr.io/cloud-builders/docker"
-    id: "Push to Artifact Registry"
-    args:
-      - "push"
-      - "us-central1-docker.pkg.dev/$PROJECT_ID/testing/iris-classifier:$COMMIT_SHA"
+  # # ==========================================
+  # # STEP 1: Push Image to Regional Artifact Registry
+  # # ==========================================
+  # - name: "gcr.io/cloud-builders/docker"
+  #   id: "Push to Artifact Registry"
+  #   args:
+  #     - "push"
+  #     - "us-central1-docker.pkg.dev/$PROJECT_ID/testing/iris-classifier:$COMMIT_SHA"
 
   # ==========================================
   # STEP 2: Connect to VM & Execute Smart Deployment

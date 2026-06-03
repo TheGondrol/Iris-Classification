@@ -36,16 +36,23 @@ steps:
 
         echo "====== 1. CHECKING DOCKER INSTALLATION ======"
         if ! command -v docker &> /dev/null; then
-            echo "Docker is missing. Commencing automated installation..."
+            echo "Docker is missing. Commencing automated Debian installation..."
             sudo apt-get update -y
-            sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+            sudo apt-get install -y ca-certificates curl gnupg
+            
+            # Create the keyring directory and fetch Debian-specific Docker GPG keys
+            sudo install -m 0755 -d /usr/share/keyrings
+            curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+            sudo chmod a+r /usr/share/keyrings/docker-archive-keyring.gpg
+
+            # Add the official DEBIAN Docker repository instead of Ubuntu
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+            
             sudo apt-get update -y
-            sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+            sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
             sudo systemctl start docker
             sudo systemctl enable docker
-            echo "Docker successfully installed!"
+            echo "Docker successfully installed on Debian!"
         else
             echo "Docker presence detected. Skipping installation step."
         fi

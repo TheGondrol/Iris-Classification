@@ -69,3 +69,9 @@ steps:
           us-central1-docker.pkg.dev/qwiklabs-gcp-00-92beb30aa233/testing/iris-classifier:$COMMIT_SHA
 
         echo "====== DEPLOYMENT SUCCESSFUL ======"
+
+# ==========================================
+# GLOBAL OPTIONS: Fixes the Service Account logging issue
+# ==========================================
+options:
+  logging: CLOUD_LOGGING_ONLY

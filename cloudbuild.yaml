@@ -1,26 +1,26 @@
 steps:
   # ==========================================
-  # STEP 1: Build the Docker Image
+  # STEP 0: Build the Docker Image
   # ==========================================
   - name: "gcr.io/cloud-builders/docker"
     id: "Build Docker Image"
     args:
       - "build"
       - "-t"
-      - "asia-southeast1-docker.pkg.dev/$PROJECT_ID/testing/iris-classifier:$COMMIT_SHA"
+      - "asia-southeast1-docker.pkg.dev/common-cicd-dev-01/testing/iris-classifier:$COMMIT_SHA"
       - "."
 
   # ==========================================
-  # STEP 2: Push Image to Regional Artifact Registry
+  # STEP 1: Push Image to Regional Artifact Registry
   # ==========================================
   - name: "gcr.io/cloud-builders/docker"
     id: "Push to Artifact Registry"
     args:
       - "push"
-      - "asia-southeast1-docker.pkg.dev/$PROJECT_ID/testing/iris-classifier:$COMMIT_SHA"
+      - "asia-southeast1-docker.pkg.dev/common-cicd-dev-01/testing/iris-classifier:$COMMIT_SHA"
 
   # ==========================================
-  # STEP 3: Connect to VM & Execute Smart Deployment
+  # STEP 2: Connect to VM & Execute Smart Deployment
   # ==========================================
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     id: "Deploy to Compute Engine VM"
@@ -54,7 +54,7 @@ steps:
         sudo docker credential gcr-helper install
 
         echo "====== 3. PULLING LATEST CONTAINER IMAGE ======"
-        sudo docker pull asia-southeast1-docker.pkg.dev/$PROJECT_ID/testing/iris-classifier:$COMMIT_SHA
+        sudo docker pull asia-southeast1-docker.pkg.dev/common-cicd-dev-01/testing/iris-classifier:$COMMIT_SHA
 
         echo "====== 4. RESTARTING APP CONTAINER ON PORT 5000 ======"
         # Stop and remove older container versions if they exist
@@ -66,7 +66,7 @@ steps:
           --name iris-container \
           --restart always \
           -p 80:5000 \
-          asia-southeast1-docker.pkg.dev/$PROJECT_ID/testing/iris-classifier:$COMMIT_SHA
+          asia-southeast1-docker.pkg.dev/common-cicd-dev-01/testing/iris-classifier:$COMMIT_SHA
 
         echo "====== DEPLOYMENT SUCCESSFUL ======"
 

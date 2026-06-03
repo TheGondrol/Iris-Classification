@@ -1,0 +1,71 @@
+steps:
+  # ==========================================
+  # STEP 1: Build the Docker Image
+  # ==========================================
+  - name: "gcr.io/cloud-builders/docker"
+    id: "Build Docker Image"
+    args:
+      - "build"
+      - "-t"
+      - "asia-southeast1-docker.pkg.dev/$PROJECT_ID/testing/iris-classifier:$COMMIT_SHA"
+      - "."
+
+  # ==========================================
+  # STEP 2: Push Image to Regional Artifact Registry
+  # ==========================================
+  - name: "gcr.io/cloud-builders/docker"
+    id: "Push to Artifact Registry"
+    args:
+      - "push"
+      - "asia-southeast1-docker.pkg.dev/$PROJECT_ID/testing/iris-classifier:$COMMIT_SHA"
+
+  # ==========================================
+  # STEP 3: Connect to VM & Execute Smart Deployment
+  # ==========================================
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    id: "Deploy to Compute Engine VM"
+    entrypoint: "gcloud"
+    args:
+      - "compute"
+      - "ssh"
+      - "gc-bribrain-dev-gce-tmp-01" # Replace with your actual VM instance name
+      - "--zone=asia-southeast1-a" # Replace with your actual VM zone
+      - "--command="
+      - |
+        set -e # Exit immediately if a command exits with a non-zero status
+
+        echo "====== 1. CHECKING DOCKER INSTALLATION ======"
+        if ! command -v docker &> /dev/null; then
+            echo "Docker is missing. Commencing automated installation..."
+            sudo apt-get update -y
+            sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+            sudo apt-get update -y
+            sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+            sudo systemctl start docker
+            sudo systemctl enable docker
+            echo "Docker successfully installed!"
+        else
+            echo "Docker presence detected. Skipping installation step."
+        fi
+
+        echo "====== 2. CONFIGURING REGISTRY CREDENTIALS ======"
+        sudo docker credential gcr-helper install
+
+        echo "====== 3. PULLING LATEST CONTAINER IMAGE ======"
+        sudo docker pull asia-southeast1-docker.pkg.dev/$PROJECT_ID/testing/iris-classifier:$COMMIT_SHA
+
+        echo "====== 4. RESTARTING APP CONTAINER ======"
+        # Stop and remove older container versions if they exist
+        sudo docker stop iris-container || true
+        sudo docker rm iris-container || true
+
+        # Run the freshly pulled image
+        sudo docker run -d \
+          --name iris-container \
+          --restart always \
+          -p 80:5000 \
+          asia-southeast1-docker.pkg.dev/$PROJECT_ID/testing/iris-classifier:$COMMIT_SHA
+
+        echo "====== DEPLOYMENT SUCCESSFUL ======"
